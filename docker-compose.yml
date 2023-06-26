@@ -1,0 +1,41 @@
+version:  "3"
+
+services:
+  mssql_admin:
+    image: mcr.microsoft.com/azure-sql-edge:latest
+    cap_add: [ 'SYS_PTRACE' ]
+    environment:
+      - "ACCEPT_EULA=1"
+      - "MSSQL_SA_PASSWORD=SU2orange!"
+    ports:
+      - "14330:1433"
+    hostname: mssql_admin
+    volumes:
+      - "mssql-azuresql-edge-data_param:/var/opt/mssql"
+  sc_administrador_back:
+    image: camilocalderont/sc_administrador_back:1.0
+    environment:
+      - "CONNECTION_STRING=Data Source=mssql_admin,1433;Initial Catalog=ADMINISTRADOR;User Id=sa;Password=SU2orange!;"   
+    ports:
+      - "8081:80"    
+    depends_on:
+      - mssql_admin
+  sc_parametrodetalle_back:
+    image: camilocalderont/sc_parametrodetalle_back:win.1.1
+    environment:
+      - "CONNECTION_STRING=Data Source=mssql_admin,1433;Initial Catalog=PARAMETRO;User Id=sa;Password=SU2orange!;"   
+    ports:
+      - "8082:80"    
+    depends_on:
+      - mssql_admin
+  sc_sicuentanos_front:
+    image: camilocalderont/sc_sicuentanos_front:1.0
+    environment: 
+      - "REACT_APP_SC_ADMINISTRADOR_API_URL=http://sc_administrador_back:8081/api/"
+      - "REACT_APP_TV_PARAMETRO_API_URL=http://sc_parametrodetalle_back:8082/api/"  
+    ports:
+      - "8083:80"    
+    depends_on:
+      - mssql_admin             
+volumes:
+    mssql-azuresql-edge-data_param:
